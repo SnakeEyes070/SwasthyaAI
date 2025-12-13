@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RehabAI - Patient Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <h1>RehabAI</h1>
+                </div>
+                <p class="tagline">Patient Dashboard</p>
+            </div>
+            
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatar">
+                    <!-- Will be filled by JS -->
+                </div>
+                <div class="user-info">
+                    <h3 id="userName">Loading...</h3>
+                    <p id="userEmail">patient@example.com</p>
+                    <p id="userCondition" class="user-tag"></p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-dumbbell"></i>
+                    <span>Exercises</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Progress</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Schedule</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-user-md"></i>
+                    <span>My Doctor</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-file-medical-alt"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <button class="btn logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1>Welcome back, <span id="greetingName">Patient</span>!</h1>
+                    <p>Track your exercises and recovery progress</p>
+                </div>
+                <div class="date-display">
+                    <i class="fas fa-calendar"></i>
+                    <span id="currentDate">Loading...</span>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="dashboard-cards">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Total Sessions</h3>
+                        <div class="card-icon blue">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                    </div>
+                    <div class="card-value" id="totalSessions">0</div>
+                    <div class="card-label">This month</div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Form Score</h3>
+                        <div class="card-icon green">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                    </div>
+                    <div class="card-value" id="avgFormScore">0%</div>
+                    <div class="card-label">Average accuracy</div>
+                    <div class="card-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="scoreProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Repetitions</h3>
+                        <div class="card-icon orange">
+                            <i class="fas fa-redo"></i>
+                        </div>
+                    </div>
+                    <div class="card-value" id="totalReps">0</div>
+                    <div class="card-label">Total completed</div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Recovery Progress</h3>
+                        <div class="card-icon purple">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="card-value" id="recoveryProgress">0%</div>
+                    <div class="card-label">Estimated recovery</div>
+                    <div class="card-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="recoveryBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Exercise Panel -->
+            <div class="exercise-panel">
+                <div class="exercise-header">
+                    <h2><i class="fas fa-robot"></i> AI Virtual Physiotherapist</h2>
+                    <p>Real-time exercise form analysis with AI feedback</p>
+                </div>
+                
+                <div class="exercise-content">
+                    <!-- Left: Video Feed -->
+                    <div class="video-section">
+                        <div class="video-container">
+                            <video class="input_video" autoplay></video>
+                            <canvas class="output_canvas"></canvas>
+                            <div class="video-overlay">
+                                <div class="status-indicator">
+                                    <i class="fas fa-circle"></i>
+                                    <span id="statusText">Ready</span>
+                                </div>
+                            </div>
+                            
+                            <div class="camera-controls">
+                                <button class="control-btn start" id="startExercise">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="control-btn stop" id="stopExercise" disabled>
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                                <button class="control-btn calibrate" id="calibrateCamera">
+                                    <i class="fas fa-sliders-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="exercise-list">
+                            <h3>Recommended Exercises</h3>
+                            <div class="exercise-item active" data-exercise="squats">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-person-walking"></i>
+                                </div>
+                                <div class="exercise-info">
+                                    <h4>Squats</h4>
+                                    <p>Knee and hip strengthening</p>
+                                </div>
+                            </div>
+                            <div class="exercise-item" data-exercise="leg_raises">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-person-hiking"></i>
+                                </div>
+                                <div class="exercise-info">
+                                    <h4>Leg Raises</h4>
+                                    <p>Hip flexor strengthening</p>
+                                </div>
+                            </div>
+                            <div class="exercise-item" data-exercise="bicep_curls">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-dumbbell"></i>
+                                </div>
+                                <div class="exercise-info">
+                                    <h4>Bicep Curls</h4>
+                                    <p>Arm strength recovery</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Feedback Panel -->
+                    <div class="feedback-panel">
+                        <div class="feedback-header">
+                            <h3><i class="fas fa-comment-medical"></i> AI Feedback</h3>
+                            <div class="audio-toggle">
+                                <label>
+                                    <input type="checkbox" id="audioToggle" checked>
+                                    <i class="fas fa-volume-up"></i>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="feedback-box">
+                            <p id="feedbackText">Click "Start Exercise" to begin your session</p>
+                        </div>
+                        
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-value" id="currentScore">0%</div>
+                                <div class="metric-label">Current Form</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value" id="sessionReps">0</div>
+                                <div class="metric-label">Session Reps</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value" id="kneeAngle">--°</div>
+                                <div class="metric-label">Knee Angle</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value" id="hipAngle">--°</div>
+                                <div class="metric-label">Hip Angle</div>
+                            </div>
+                        </div>
+                        
+                        <div class="session-info">
+                            <h4><i class="fas fa-clock"></i> Session Timer</h4>
+                            <div class="metric-value" id="sessionTimer">0:00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Chart -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3><i class="fas fa-chart-line"></i> Recovery Progress</h3>
+                    <div class="chart-actions">
+                        <select id="timeRange">
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-placeholder">
+                    <p>Progress chart will appear here (requires chart.js integration)</p>
+                </div>
+            </div>
+            
+            <!-- Recent Sessions -->
+            <div class="patient-list">
+                <h3><i class="fas fa-history"></i> Recent Exercise Sessions</h3>
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <p>No sessions recorded yet. Start your first exercise!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Area -->
+    <div class="notification-panel" id="notificationPanel"></div>
+    
+    <script src="firebase-config.js"></script>
+    <script src="patient-script.js"></script>
+</body>
+</html>

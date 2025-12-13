@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RehabAI - Virtual Physiotherapy Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-header">
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <h1>RehabAI</h1>
+            </div>
+            <p class="tagline">AI-Powered Virtual Physiotherapy Platform</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="tab-btn active" id="loginTab">Login</button>
+            <button class="tab-btn" id="registerTab">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <div class="auth-form active" id="loginForm">
+            <h2><i class="fas fa-sign-in-alt"></i> Welcome Back</h2>
+            
+            <div class="role-selection">
+                <h3>Login As:</h3>
+                <div class="role-options">
+                    <label class="role-option">
+                        <input type="radio" name="loginRole" value="patient" checked>
+                        <div class="role-card">
+                            <i class="fas fa-user"></i>
+                            <h4>Patient</h4>
+                            <p>Track exercises & progress</p>
+                        </div>
+                    </label>
+                    
+                    <label class="role-option">
+                        <input type="radio" name="loginRole" value="doctor">
+                        <div class="role-card">
+                            <i class="fas fa-user-md"></i>
+                            <h4>Doctor/Therapist</h4>
+                            <p>Monitor patients & prescribe</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="loginEmail"><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" id="loginEmail" placeholder="your.email@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                <div class="password-toggle">
+                    <input type="checkbox" id="showLoginPassword">
+                    <label for="showLoginPassword">Show Password</label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-block" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="#" id="switchToRegister">Sign up here</a></p>
+                <p class="demo-login">
+                    <strong>Demo Accounts:</strong><br>
+                    Patient: patient@demo.com / pass123<br>
+                    Doctor: doctor@demo.com / pass123
+                </p>
+            </div>
+        </div>
+
+        <!-- Register Form -->
+        <div class="auth-form" id="registerForm">
+            <h2><i class="fas fa-user-plus"></i> Create Account</h2>
+            
+            <div class="role-selection">
+                <h3>Register As:</h3>
+                <div class="role-options">
+                    <label class="role-option">
+                        <input type="radio" name="registerRole" value="patient" checked>
+                        <div class="role-card">
+                            <i class="fas fa-user"></i>
+                            <h4>Patient</h4>
+                            <p>Start your recovery journey</p>
+                        </div>
+                    </label>
+                    
+                    <label class="role-option">
+                        <input type="radio" name="registerRole" value="doctor">
+                        <div class="role-card">
+                            <i class="fas fa-user-md"></i>
+                            <h4>Doctor/Therapist</h4>
+                            <p>Manage patients remotely</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerName"><i class="fas fa-user"></i> Full Name</label>
+                <input type="text" id="registerName" placeholder="John Doe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="registerEmail"><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" id="registerEmail" placeholder="your.email@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="registerPassword"><i class="fas fa-lock"></i> Password</label>
+                <input type="password" id="registerPassword" placeholder="Create a password" required>
+                <div class="password-strength">
+                    <div class="strength-bar"></div>
+                    <span class="strength-text">Password strength</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerConfirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
+                <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required>
+            </div>
+
+            <!-- Patient-specific fields -->
+            <div class="patient-fields" id="patientFields">
+                <h4><i class="fas fa-plus-circle"></i> Patient Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="patientAge">Age</label>
+                        <input type="number" id="patientAge" placeholder="30" min="1" max="120">
+                    </div>
+                    <div class="form-group">
+                        <label for="patientCondition">Condition</label>
+                        <select id="patientCondition">
+                            <option value="knee_replacement">Knee Replacement</option>
+                            <option value="back_pain">Back Pain</option>
+                            <option value="shoulder_injury">Shoulder Injury</option>
+                            <option value="sports_recovery">Sports Recovery</option>
+                            <option value="post_stroke">Post-Stroke</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor-specific fields -->
+            <div class="doctor-fields" id="doctorFields">
+                <h4><i class="fas fa-plus-circle"></i> Professional Information</h4>
+                <div class="form-group">
+                    <label for="doctorLicense">License Number</label>
+                    <input type="text" id="doctorLicense" placeholder="PT-12345">
+                </div>
+                <div class="form-group">
+                    <label for="doctorSpecialty">Specialty</label>
+                    <select id="doctorSpecialty">
+                        <option value="orthopedic">Orthopedic</option>
+                        <option value="sports">Sports Medicine</option>
+                        <option value="neurological">Neurological</option>
+                        <option value="pediatric">Pediatric</option>
+                        <option value="geriatric">Geriatric</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-block" id="registerBtn">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="#" id="switchToLogin">Login here</a></p>
+            </div>
+        </div>
+
+        <div class="platform-features">
+            <h3><i class="fas fa-star"></i> Platform Features</h3>
+            <div class="features-grid">
+                <div class="feature">
+                    <i class="fas fa-robot"></i>
+                    <h4>AI-Powered Analysis</h4>
+                    <p>Real-time form correction</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h4>Multi-Device Access</h4>
+                    <p>Phone, Tablet, Desktop</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-chart-line"></i>
+                    <h4>Progress Tracking</h4>
+                    <p>Detailed analytics & reports</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-user-md"></i>
+                    <h4>Doctor Monitoring</h4>
+                    <p>Remote patient supervision</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-notification" id="notification">
+        <p id="notificationMessage"></p>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>
